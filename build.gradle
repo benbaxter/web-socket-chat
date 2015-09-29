@@ -1,0 +1,42 @@
+buildscript {
+    repositories {
+    	mavenCentral()
+      	jcenter()
+    }
+}
+
+repositories {
+	mavenCentral()
+    jcenter()
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'war'
+
+war {
+    baseName = 'chat-example'
+}
+
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+    
+    providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
+    providedCompile 'javax.websocket:javax.websocket-api:1.1'
+    compile("javax.servlet:jstl:1.2")
+    		
+    
+    testCompile("junit:junit")
+}
+
+task deploy (dependsOn: build){
+    copy {
+        from "build/libs"
+        into "C:/Users/Benjamin/Documents/NKU/Professor/CSC 456/2015Fall/apache-tomcat-8.0.8/webapps"
+        include "*.war"
+    }
+}

@@ -1,0 +1,144 @@
+<html>
+<head>
+<title>Chat Example</title>
+<style>
+.left-input-column {
+	width: 15%;
+	float: left;
+}
+.me {
+	color: #2196F3;
+}
+
+.you {
+	color: #FF5252;
+}
+</style>
+</head>
+<body>
+Welcome to a simple chat!
+<br />
+<div>
+	<section style="width:48%; float: left;">
+		<form onsubmit="return chat1();">
+			<fieldset>
+			<legend>Chat <span id="username1">1</span></legend>
+			<div>
+				<section class="left-input-column">Username:</section>
+				<section>
+					<input id="who1" placeholder="who are you?" onkeyup="submitUsername(this, 'username1', event)" />
+				</section>
+				<br/><br/>
+				<section class="left-input-column">Chat:</section>
+				<section>
+					<input id="text1" onkeypress="chat1(event);" />
+				</section>
+			<br />
+			<div id="chat-box-1"></div>
+			</fieldset>
+		</form>
+	</section>
+	
+	<section style="width:48%; float: right;">
+		<form onsubmit="return chat2();">
+			<fieldset>
+			<legend>Chat <span id="username2">2</span></legend>
+			<section class="left-input-column">Username:</section>
+			<section>
+				<input id="who2" placeholder="who are you?" onkeyup="submitUsername(this, 'username2', event)" />
+			</section>
+			<br/><br/>
+			<section class="left-input-column">Chat:</section>
+			<section>
+				<input id="text2" onkeypress="chat2(event);" />
+			</section>
+			<br />
+			<div id="chat-box-2"></div>
+			</fieldset>
+		</form>
+	</section>
+</div>
+<script type="text/javascript">
+
+function submitUsername(input, labelId, e) {
+	document.getElementById(labelId).innerHTML = input.value;
+	if( e.keyCode == 13 ) {
+		connection1.send("register=" + document.getElementById("who1").value);
+		connection2.send("register=" + document.getElementById("who2").value);
+	}
+}
+
+var connection1 = new WebSocket('ws://localhost:8080/chat-example/chat');
+
+// When the connection is open, send some data to the server
+connection1.onopen = function () {
+  connection1.send('Ping'); // Send the message 'Ping' to the server
+};
+
+// Log errors
+connection1.onerror = function (error) {
+  console.log('WebSocket Error ' + error);
+};
+
+// Log messages from the server
+connection1.onmessage = function (e) {
+  console.log('Server: ' + e.data);
+  displayData(e.data, "chat-box-1", document.getElementById("who1").value);
+};
+
+var connection2 = new WebSocket('ws://localhost:8080/chat-example/chat');
+
+connection2.onopen = function () {
+  connection2.send('Ping'); // Send the message 'Ping' to the server
+};
+
+connection2.onmessage = function (e) {
+  console.log('Server: ' + e.data);
+  displayData(e.data, "chat-box-2", document.getElementById("who2").value);
+};
+
+function displayData(data, chatBox, user) {
+	var chat = data;
+	var data = data.split("|");
+	if( data.length == 3 ) {
+		chat = "<span class='" + ((data[0] == user)? "me" : "you") + "'>";
+		chat += data[0] + "</span>" + " $&gt; " + data[2];
+	}
+	var chatBox = document.getElementById(chatBox);
+	chatBox.innerHTML = chatBox.innerHTML + "<br/>" + chat;
+}
+
+function chat1(e) {
+	var text = document.getElementById("text1").value;
+	var from = document.getElementById("who1").value;
+	var to = document.getElementById("who2").value;
+	if( e ) {
+		if( e.keyCode == 13 ) { //pressed enter
+			sendMessage(from, to, text, connection1);
+			document.getElementById("text1").value = "";
+		}
+	}
+	return false;
+}
+
+function chat2(e) {
+	var text = document.getElementById("text2").value;
+	var to = document.getElementById("who1").value;
+	var from = document.getElementById("who2").value;
+	if( e ) {
+		if( e.keyCode == 13 ) { //pressed enter
+			sendMessage(from, to, text, connection2);
+			document.getElementById("text2").value = "";
+		}
+	}
+	return false;
+}
+
+function sendMessage(from, to, message, connection) {
+	connection.send(from + "|" + to + "|" + message);
+}
+
+</script>
+
+</body>
+</html>
